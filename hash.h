@@ -53,10 +53,11 @@ struct hash {
 struct pair {
 	void *key;
 	void *value;
+	void (*delete)(void *);
 };
 
 struct pair *
-pair_create(void *KEY, void *VALUE)
+pair_create(void *KEY, void *VALUE, void (*DELETE)(void *))
 	// Assumes KEY is a string.
 {
 	struct pair *pair = malloc(sizeof(struct pair));
@@ -65,6 +66,7 @@ pair_create(void *KEY, void *VALUE)
 	strcpy(pair->key, KEY);
 	// <<<<< End key-specific code.
 	pair->value = VALUE;
+	pair->delete = DELETE;
 	return pair;
 }
 
@@ -77,7 +79,7 @@ pair_delete(struct pair *PAIR)
 	// >>>>> Begin key-specific code.
 	free(PAIR->key);
 	// <<<<< End key-specific code.
-	free(PAIR->value);
+	PAIR->delete(PAIR->value);
 	free(PAIR);
 	return 0;
 }
@@ -141,7 +143,7 @@ hash_insert(struct hash *HASH, void *KEY, void *DATA)
 	struct list *list = NULL;
 	if (!HASH || !KEY) return -1;
 	list = (HASH->table)[hash_map(HASH, KEY)];
-	list_push_front(list, pair_create(KEY, DATA));
+	list_push_front(list, pair_create(KEY, DATA, HASH->delete));
 	return 0;
 }
 
@@ -202,6 +204,7 @@ hash_remove(struct hash *HASH, void *KEY)
 	list_delete(list);
 }
 
+/*
 void
 data_delete_int(void *DATA)
 {
@@ -239,3 +242,4 @@ main(int ARGC, char **ARGV)
 	hash_delete(hash);
 	return 0;
 }
+*/
